@@ -19,28 +19,25 @@ public class TextGenerator {
         }
 
         boolean many = false;
-        if (extract.highRequesters.size() > multiuserThreshold){
+        if (extract.uniqueUsers > multiuserThreshold){
             res = "Many people accessed you data within the last " + timeframe + ".";
-            if (detailed) res += "(" + extract.highRequesters.size() +  " people, " + extract.total + " accesses)";
+            if (detailed) res += "(" + extract.uniqueUsers +  " people, " + extract.total + " accesses)";
             many = true;
         }
 
         boolean high = false;
-        String[] highRequesterNames = new String[extract.highRequesters.size()];
+        String[] highRequesterNames = extract.highRequesters.keySet().toArray(new String[0]);
         if (!extract.highRequesters.isEmpty()){
             high = true;
             if(many) res += " Specifically your "; else res += "Your ";
             res += "colleague";
 
             if (extract.highRequesters.size() == 1){
-                highRequesterNames[0] = extract.highRequesters.entrySet().iterator().next().getKey();
                 res += " " + highRequesterNames[0];
             } else{
                 res += "s";
-                Iterator<Map.Entry<String, RequestExtract.Counter>> it = extract.highRequesters.entrySet().iterator();
                 StringBuilder temp = new StringBuilder(); //String builder is preferable to simple + concatenation in loops
                 for (int i = 0; i < extract.highRequesters.size() -2; i++){
-                    highRequesterNames[i] = it.next().getKey();
                     temp.append(" ").append(highRequesterNames[i]).append(",");
                 }
                 res += temp.toString();
@@ -50,13 +47,12 @@ public class TextGenerator {
 
             if(extract.highRequesters.size() == 1){
                 RequestExtract.Counter c = extract.highRequesters.entrySet().iterator().next().getValue();
-                res += "which issues you ";
                 String temp = "";
                 if (c.creator  > threshold) temp += "created and ";
                 if (c.assignee > threshold) temp += "were working on and ";
                 if (c.reporter > threshold) temp += "reported";
 
-                if (temp.isEmpty()) temp = "your activity";
+                if (temp.isEmpty()) temp = "your activity"; else res += "which issues you ";
                 if (temp.substring(temp.length()-3).compareTo("nd ") == 0) temp = temp.substring(0,temp.length()-5);
                 if (temp.length() > 32) temp = temp.replace("ed and ", "ed, ");
                 res += temp;
@@ -66,24 +62,26 @@ public class TextGenerator {
             res +=".";
 
             if (detailed){
+                res += "\n";
                 if (highRequesterNames.length == 1){
                     RequestExtract.Counter c = extract.highRequesters.get(highRequesterNames[0]);
-                    res += "(" + c.assignee + " request querying if you were the assignee on an issue, " + c.creator + " if you were the creator and "
+                    res += "(" + c.assignee + " requests querying if you were the assignee on an issue, " + c.creator + " if you were the creator and "
                             + c.reporter + " if you were the reporter)";
                 } else {
                     StringBuilder temp = new StringBuilder(); //String builder is preferable to simple + concatenation in loops
-                    temp.append("\n(");
+                    temp.append("(");
                     for (String user: highRequesterNames) {
                         RequestExtract.Counter c = extract.highRequesters.get(user);
                         temp.append(user).append(" made ")
-                                .append(c.assignee).append(" request  querying if you were the assignee of an issue, ")
+                                .append(c.assignee).append(" requests  querying if you were the assignee of an issue, ")
                                 .append(c.creator).append(" if you were the creator and ")
-                                .append(c.reporter).append(" if you were the reporter\n");
+                                .append(c.reporter).append(" if you were the reporter,\n");
                     }
                     res += temp.toString();
-                    res = res.substring(0, res.length()-1);
+                    res = res.substring(0, res.length()-2);
                     res += ")";
                 }
+                res += "\n";
             }
             res += "\n";
         }
@@ -94,12 +92,10 @@ public class TextGenerator {
             neg = true;
             if ((high || many)) res += "Additionally your colleague"; else res += "Your colleague";
 
-            String[] negRequesters = new String[extract.negatives.entrySet().size()];
+            String[] negRequesters = extract.negatives.keySet().toArray(new String[0]);
             List<Integer> l = new ArrayList<>();
             if(extract.negatives.size() == 1){
-                negRequesters[0] = extract.negatives.entrySet().iterator().next().getKey();
                 l = extract.negatives.get(negRequesters[0]);
-
                 res += " " + negRequesters[0];
             } else {
                 res += "s";
@@ -108,18 +104,20 @@ public class TextGenerator {
                     temp.append(" ").append(negRequesters[i]).append(",");
                     l.addAll(extract.negatives.get(negRequesters[i]));
                 }
+                l.addAll(extract.negatives.get(negRequesters[extract.negatives.size() -2]));
+                l.addAll(extract.negatives.get(negRequesters[extract.negatives.size() -1]));
                 res += temp.toString();
                 res += " " + negRequesters[extract.negatives.size() -2] +  " and " + negRequesters[extract.negatives.size() -1];
             }
 
             res += " made ";
-            if(extract.negatives.size() == 1) res += "a request"; else res += "requests";
+            if(extract.negatives.size() == 1 && l.size() == 1) res += "a request"; else res += "requests";
             res += " from which they can deduce on which issues you were not the ";
 
             String temp = "";
             if (l.contains(0) || l.contains(3)) temp += "assignee or ";
             if (l.contains(1) || l.contains(4)) temp += "reporter or ";
-            if (l.contains(2) || l.contains(5)) temp += "reporter";
+            if (l.contains(2) || l.contains(5)) temp += "creator";
 
             if (temp.substring(temp.length()-3).compareTo("or ") == 0) temp = temp.substring(0,temp.length()-4);
             if (temp.length() > 29) temp = temp.replace("ee or ", "ee, ");
@@ -129,33 +127,34 @@ public class TextGenerator {
             res +=".";
 
             if (detailed){
+                res += "\n";
                 if (negRequesters.length == 1){
                     l = extract.negatives.get(negRequesters[0]);
-                    res += "(" + l.stream().filter(i -> (i == 0 ||i ==3)).count() + " request querying if you were no the assignee on an issue, "
-                               + l.stream().filter(i -> (i == 1 ||i ==4)).count() + " if you were not the creator and "
-                               + l.stream().filter(i -> (i == 2 ||i ==5)).count() + " if you were not the reporter)";
+                    res += "(" + l.stream().filter(i -> (i == 0 ||i ==3)).count() + " requests querying if you were no the assignee on an issue, "
+                               + l.stream().filter(i -> (i == 1 ||i ==4)).count() + " if you were not the reporter and "
+                               + l.stream().filter(i -> (i == 2 ||i ==5)).count() + " if you were not the creator)";
                 } else {
                     StringBuilder temp2 = new StringBuilder(); //String builder is preferable to simple + concatenation in loops
-                    temp2.append("\n(");
+                    temp2.append("(");
                     for (String user: negRequesters) {
                         l = extract.negatives.get(user);
                         temp2.append(user).append(" made ")
-                                .append(l.stream().filter(i -> (i == 0 ||i ==3)).count()).append(" request  querying if you were not the assignee of an issue, ")
-                                .append(l.stream().filter(i -> (i == 1 ||i ==4)).count()).append(" if you were the not creator and ")
-                                .append(l.stream().filter(i -> (i == 2 ||i ==5)).count()).append(" if you were the not reporter\n");
+                                .append(l.stream().filter(i -> (i == 0 ||i ==3)).count()).append(" requests  querying if you were not the assignee of an issue, ")
+                                .append(l.stream().filter(i -> (i == 1 ||i ==4)).count()).append(" if you were the not reporter and ")
+                                .append(l.stream().filter(i -> (i == 2 ||i ==5)).count()).append(" if you were the not creator,\n");
                     }
                     res += temp2.toString();
-                    res = res.substring(0, res.length()-1);
+                    res = res.substring(0, res.length()-2);
                     res += ")";
                 }
+                res += "\n";
             }
             res += "\n";
         }
 
         if(!extract.performance.isEmpty()){
-            String[] respRequesters = new String[extract.performance.size()];
+            String[] respRequesters = extract.performance.keySet().toArray(new String[0]);
             if(extract.performance.size() == 1){
-                respRequesters[0] = extract.performance.entrySet().iterator().next().getKey();
                 res += "Your colleague " + respRequesters[0];
             }
             else res += "Some of your colleagues";
@@ -163,13 +162,13 @@ public class TextGenerator {
             if(many || high || neg) res += " also";
 
             res += " made";
-            if(extract.performance.size() == 1) res += " a request"; else res += " requests";
-            res += " which could be related to tracking your performance or responsibilities.";
+            if(extract.performance.size() == 1 && extract.performance.get(respRequesters[0]).size() == 1) res += " a request"; else res += " requests";
+            res += " which could be related to tracking your performance or responsibilities:\n";
 
             List<RequestExtract.Details> l = new ArrayList<>();
             if (extract.performance.size() == 1){
                 l = extract.performance.get(respRequesters[0]);
-                res += " They";
+                res += "They";
 
                 if (l.stream().anyMatch(d -> (d.type == 6 || d.type == 7))){
                     String temp = " were interested in which issues you";
@@ -198,13 +197,13 @@ public class TextGenerator {
                 if (!resolved.isEmpty()){
                     if (resolved.size() != 1){
                         for (int i = 0; i < resolved.size() -2; i++){
-                            temp.append(" ").append(resolved.get(i)).append(",");
+                            temp.append(resolved.get(i)).append(", ");
                         }
                         res += temp.toString();
-                        res += " " + resolved.get(resolved.size()-2) +  " and " + resolved.get(resolved.size()-1);
+                        res += resolved.get(resolved.size()-2) +  " and " + resolved.get(resolved.size()-1);
                         res += " were interested in which issues you resolved";
                     }else {
-                        res += " " + resolved.get(0) + " was interested in which issued you resolved";
+                        res += resolved.get(0) + " was interested in which issued you resolved";
                     }
                 }
                 if (!notResolved.isEmpty()){
@@ -212,27 +211,28 @@ public class TextGenerator {
                     temp = new StringBuilder();
                     if (notResolved.size() != 1){
                         for (int i = 0; i < notResolved.size() -2; i++){
-                            temp.append(" ").append(notResolved.get(i)).append(",");
+                            temp.append(notResolved.get(i)).append(", ");
                         }
                         res += temp.toString();
-                        res += " " + notResolved.get(notResolved.size()-2) +  " and " + notResolved.get(notResolved.size()-1);
+                        res += notResolved.get(notResolved.size()-2) +  " and " + notResolved.get(notResolved.size()-1);
                         res += " were interested in which issues you did not resolve";
                     }else {
-                        res += " " + notResolved.get(0) + " was interested in which issued you did not resolve";
+                        res += notResolved.get(0) + " was interested in which issued you did not resolve";
                     }
                 }
                 if (!options.isEmpty()){
-                    if (!(notResolved.isEmpty() && resolved.isEmpty())) res += " and ";
+                    if (!notResolved.isEmpty() && !resolved.isEmpty()) res += "\nand ";
+                    else if (!(notResolved.isEmpty() && resolved.isEmpty())) res += " and ";
                     temp = new StringBuilder();
                     if (options.size() != 1){
                         for (int i = 0; i < options.size() -2; i++){
-                            temp.append(" ").append(options.get(i)).append(",");
+                            temp.append(options.get(i)).append(", ");
                         }
                         res += temp.toString();
-                        res += " " + options.get(options.size()-2) +  " and " + options.get(options.size()-1);
+                        res += options.get(options.size()-2) +  " and " + options.get(options.size()-1);
                         res += " checked if you were involved in an issue within a certain time frame.";
                     }else {
-                        res += " " + options.get(0) + " checked if you were involved in an issue within a certain time frame.";
+                        res += options.get(0) + " checked if you were involved in an issue within a certain time frame.";
                     }
                 }
             }
@@ -259,18 +259,19 @@ public class TextGenerator {
                                     opt = " during the period of the ";
                                     d.date = d.date.substring(1, d.date.length() - 1);
                                     String[] dates = d.date.split(",");
-                                    opt += dates[0].substring(1, dates[0].length() - 1) + " and the " + dates[1].substring(1, dates[1].length() - 1);
+                                    if(d.date.contains("\"")) opt += dates[0].substring(1, dates[0].length() - 1) + " and the " + dates[1].substring(1, dates[1].length() - 1);
+                                    else opt += dates[0] + " and the " + dates[1];
                                 }
-                                case 1 -> opt = " after the " + d.date.substring(1, d.date.length() - 1);
-                                case 2 -> opt = " on the " + d.date.substring(1, d.date.length() - 1);
-                                case 3 -> opt = " before the " + d.date.substring(1, d.date.length() - 1);
+                                case 1 -> {if(d.date.contains("\"")) d.date = d.date.substring(1, d.date.length() - 1); opt = " after the " + d.date;}
+                                case 2 -> {if(d.date.contains("\"")) d.date = d.date.substring(1, d.date.length() - 1); opt = " on the " + d.date;}
+                                case 3 -> {if(d.date.contains("\"")) d.date = d.date.substring(1, d.date.length() - 1); opt = " before the " + d.date;}
                             }
                             temp.append(opt);
                         }
-                        temp.append("\n");
+                        temp.append(",\n");
                     }
                 }
-                temp.replace(temp.length()-1, temp.length()-1, "");
+                temp.replace(temp.length()-2, temp.length(), "");
                 temp.append(")");
 
                 res += temp;

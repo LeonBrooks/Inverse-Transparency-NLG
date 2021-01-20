@@ -47,7 +47,7 @@ public class InputAnalyzer {
 
                 case "NOT":
                     type = 3;
-                    requestedUser = query[2];
+                    requestedUser = query[3];
                     requestedUser = requestedUser.substring(1,requestedUser.length()-1);
                     if (requestedUser.contains(",")){
                         multiple = true;
@@ -77,13 +77,16 @@ public class InputAnalyzer {
             if(multiple){
                 String[] reqUsers = requestedUser.split(",");
                 if(type == 3){
+                    if(query[0].compareToIgnoreCase("reporter")== 0){type ++;}
+                    if(query[0].compareToIgnoreCase("creator")== 0) {type += 2;}
                     for (String u : reqUsers){
                         RequestExtract extract = res.getOrDefault(u, new RequestExtract());
 
                         RequestExtract.Counter c = extract.highRequesters.getOrDefault(req[0], extract.new Counter());
                         extract.total ++;
-                        if(query[0].compareToIgnoreCase("assignee")==0){c.assignee++; }
-                        if(query[0].compareToIgnoreCase("reporter")== 0){c.reporter++; type++;}else{c.creator++; type += 2;}
+                        if(type == 3){c.assignee++; }
+                        else if(type == 4){c.reporter++;}
+                        else{c.creator++;}
                         extract.highRequesters.putIfAbsent(req[0], c);
 
                         List<Integer> l = extract.negatives.getOrDefault(req[0], new ArrayList<>());
@@ -98,7 +101,8 @@ public class InputAnalyzer {
                         RequestExtract.Counter c = extract.highRequesters.getOrDefault(req[0], extract.new Counter());
                         extract.total ++;
                         if(query[0].compareToIgnoreCase("assignee")==0){c.assignee++; }
-                        if(query[0].compareToIgnoreCase("reporter")== 0){c.reporter++;}else{c.creator++;}
+                        else if(query[0].compareToIgnoreCase("reporter")== 0){c.reporter++;}
+                        else{c.creator++;}
                         extract.highRequesters.putIfAbsent(req[0], c);
                         res.putIfAbsent(u,extract);
                     }
@@ -111,7 +115,8 @@ public class InputAnalyzer {
 
                     RequestExtract.Counter c = extract.highRequesters.getOrDefault(req[0], extract.new Counter());
                     if(type == 7 || type == 6 || query[0].compareToIgnoreCase("assignee")==0){c.assignee++; d.field = "assignee";}
-                    if(query[0].compareToIgnoreCase("reporter")== 0){c.reporter++; d.field = "reporter";}else{c.creator++; d.field = "creator";}
+                    else if(query[0].compareToIgnoreCase("reporter")== 0){c.reporter++; d.field = "reporter";}
+                    else{c.creator++; d.field = "creator";}
                     extract.highRequesters.putIfAbsent(req[0], c);
 
                     List<RequestExtract.Details> l = extract.performance.getOrDefault(req[0], new ArrayList<>());
@@ -123,15 +128,15 @@ public class InputAnalyzer {
                 } else {
                     RequestExtract.Counter c = extract.highRequesters.getOrDefault(req[0], extract.new Counter());
                     switch (type) {
-                        case 5, 3 -> {
+                        case 5, 3, 1 -> {
                             extract.total++;
-                            if (type == 5) {
+                            if (type == 5 || type == 1) {
                                 type = 0;
                             }
                             if (query[0].compareToIgnoreCase("assignee") == 0) {
                                 c.assignee++;
                             }
-                            if (query[0].compareToIgnoreCase("reporter") == 0) {
+                            else if (query[0].compareToIgnoreCase("reporter") == 0) {
                                 c.reporter++;
                                 type++;
                             } else {
@@ -143,12 +148,12 @@ public class InputAnalyzer {
                             l.add(type);
                             extract.negatives.putIfAbsent(req[0], l);
                         }
-                        case 0, 1, 2, 4 -> {
+                        case 0, 2, 4 -> {
                             extract.total++;
                             if (query[0].compareToIgnoreCase("assignee") == 0) {
                                 c.assignee++;
                             }
-                            if (query[0].compareToIgnoreCase("reporter") == 0) {
+                            else if (query[0].compareToIgnoreCase("reporter") == 0) {
                                 c.reporter++;
                             } else {
                                 c.creator++;
@@ -157,6 +162,7 @@ public class InputAnalyzer {
                         }
                     }
                 }
+                extract.uniqueUsers = extract.highRequesters.size();
                 res.putIfAbsent(requestedUser,extract);
             }
         }

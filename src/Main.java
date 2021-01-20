@@ -8,18 +8,18 @@ public class Main {
         int threshold, multiuserThreshold;
         boolean detailed = false;
         try {
-            if(args[1].compareToIgnoreCase("-help") == 0){
+            if(args[0].compareToIgnoreCase("-help") == 0){
                 System.out.println("TODO help");
                 return;
             }
 
-            inputPath = args[1];
-            outputPath = args[2];
-            timeFrame = args[3];
-            threshold = Integer.parseInt(args[4]);
-            multiuserThreshold = Integer.parseInt(args[5]);
-            if(args.length >= 7){
-                detailed = Boolean.parseBoolean(args[6]);
+            inputPath = args[0];
+            outputPath = args[1];
+            timeFrame = args[2];
+            threshold = Integer.parseInt(args[3]);
+            multiuserThreshold = Integer.parseInt(args[4]);
+            if(args.length >= 6 && args[6].compareToIgnoreCase("detailed") == 0){
+                detailed = true;
             }
 
         } catch (NumberFormatException e){
@@ -38,6 +38,7 @@ public class Main {
 
             String line;
             while((line = reader.readLine()) != null){
+                if(line.trim().isEmpty()) continue;
                 input.add(line.split("\\{"));
 
                 if (input.get(input.size()-1).length != 2 ){
@@ -71,14 +72,14 @@ public class Main {
             } else {
                 for (Map.Entry<String,String> e : result.entrySet()){
                     writer.write("""
-                            ==============================================================================
-                                                       """ + e.getKey() + "\n \n" +
+                            ============================================================================================================================================================
+                            """ + "                                                               " +  e.getKey() + "\n \n" +
                             e.getValue()+ """
-                            
-                            ==============================================================================
+                                                        
                             
                             """);
                 }
+                writer.write("============================================================================================================================================================");
             }
             writer.close();
         } catch (FileNotFoundException e){

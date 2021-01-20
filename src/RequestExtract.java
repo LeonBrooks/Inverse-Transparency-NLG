@@ -20,13 +20,15 @@ public class RequestExtract {
         String date = "";
     }
 
-    public int total;
+    public int total, uniqueUsers;
     public Map<String, Counter> highRequesters;
     public Map<String, List<Integer>> negatives;
     public Map<String, List<Details>> performance;
 
 
     public RequestExtract() {
+        total = 0;
+        uniqueUsers = 0;
         this.highRequesters = new HashMap<>();
         this.negatives = new HashMap<>();
         this.performance = new HashMap<>();
