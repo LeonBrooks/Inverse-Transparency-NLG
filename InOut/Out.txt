@@ -1,0 +1,23 @@
+============================================================================================================================================================
+                                                               Tom
+ 
+There was no extraordinary data access recorded within the last week.
+
+============================================================================================================================================================
+                                                               Tara
+ 
+Many people accessed you data within the last week. Specifically your colleagues John and Tina seemed very interested in  your activity.
+Additionally your colleagues John and Tina made requests from which they can deduce on which issues you were not the assignee or reporter.
+Your colleague John also made requests which could be related to tracking your performance or responsibilities:
+They were interested in which issues you did and did not resolve and checked if you were involved in an issue within a certain time frame.
+
+============================================================================================================================================================
+                                                               Jim
+ 
+Many people accessed you data within the last week. Specifically your colleague John seemed very interested in which issues you were working on.
+Additionally your colleague John made requests from which they can deduce on which issues you were not the reporter.
+Some of your colleagues also made requests which could be related to tracking your performance or responsibilities:
+Patrick and John were interested in which issues you resolved, Tina was interested in which issued you did not resolve
+and John checked if you were involved in an issue within a certain time frame.
+
+============================================================================================================================================================

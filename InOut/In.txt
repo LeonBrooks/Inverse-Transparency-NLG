@@ -1,0 +1,21 @@
+John{https://jira.atlassian.com/rest/api/latest/search?jql=assignee = Jim
+John{https://jira.atlassian.com/rest/api/latest/search?jql=assignee != Tara
+John{https://jira.atlassian.com/rest/api/latest/search?jql=assignee IN (Jim,Tara)
+John{https://jira.atlassian.com/rest/api/latest/search?jql=reporter NOT IN (Jim,Tara)
+John{https://jira.atlassian.com/rest/api/latest/search?jql=reporter NOT IN (Jim,Tara)
+John{https://jira.atlassian.com/rest/api/latest/search?jql=assignee WAS Jim ON 1.1.2021
+John{https://jira.atlassian.com/rest/api/latest/search?jql=reporter WAS NOT Tara DURING (1.1.2021,10.1.2021)
+John{https://jira.atlassian.com/rest/api/latest/search?jql=status Was "Resolved" BY Jim
+John{https://jira.atlassian.com/rest/api/latest/search?jql= status WAS NOT "Resolved" BY Tara
+John{https://jira.atlassian.com/rest/api/latest/search?jql= status WAS "Resolved" BY Tara
+
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=creator = Tom
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=creator = Tara
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=creator = Tara
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=creator = Tara
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=creator = Tara
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=status Was Not "Resolved" BY Jim
+Tina{https://jira.atlassian.com/rest/api/latest/search?jql=reporter != Tara
+
+Patrick{https://jira.atlassian.com/rest/api/latest/search?jql=reporter = Tara
+Patrick{https://jira.atlassian.com/rest/api/latest/search?jql=status Was "Resolved" BY Jim
