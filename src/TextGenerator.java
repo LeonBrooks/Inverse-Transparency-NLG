@@ -90,7 +90,7 @@ public class TextGenerator {
         boolean neg = false;
         if (!extract.negatives.isEmpty()){
             neg = true;
-            if ((high || many)) res += "Additionally your colleague"; else res += "Your colleague";
+            if ((high || many)) res += "Additionally, your colleague"; else res += "Your colleague";
 
             String[] negRequesters = extract.negatives.keySet().toArray(new String[0]);
             List<Integer> l = new ArrayList<>();
@@ -203,7 +203,7 @@ public class TextGenerator {
                         res += resolved.get(resolved.size()-2) +  " and " + resolved.get(resolved.size()-1);
                         res += " were interested in which issues you resolved";
                     }else {
-                        res += resolved.get(0) + " was interested in which issued you resolved";
+                        res += resolved.get(0) + " was interested in which issues you resolved";
                     }
                 }
                 if (!notResolved.isEmpty()){
@@ -217,7 +217,7 @@ public class TextGenerator {
                         res += notResolved.get(notResolved.size()-2) +  " and " + notResolved.get(notResolved.size()-1);
                         res += " were interested in which issues you did not resolve";
                     }else {
-                        res += notResolved.get(0) + " was interested in which issued you did not resolve";
+                        res += notResolved.get(0) + " was interested in which issues you did not resolve";
                     }
                 }
                 if (!options.isEmpty()){
