@@ -20,7 +20,7 @@ public class TextGenerator {
 
         boolean many = false;
         if (extract.uniqueUsers > multiuserThreshold){
-            res = "Many people accessed you data within the last " + timeframe + ".";
+            res = "Many people accessed your data within the last " + timeframe + ".";
             if (detailed) res += "(" + extract.uniqueUsers +  " people, " + extract.total + " accesses)";
             many = true;
         }
