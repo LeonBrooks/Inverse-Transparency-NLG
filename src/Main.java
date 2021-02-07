@@ -80,14 +80,18 @@ public class Main {
             e.printStackTrace();
         }
 
+        //run of the InputAnalyzer Phase
         Map<String, RequestExtract> analyzerOutput = InputAnalyzer.analyzeInput(input,threshold);
         if(analyzerOutput == null){
             System.err.println("Unexpected error while interpreting input");
             return;
         }
+
+        //run of the TextGenerator Phase
         Map<String, String> result = TextGenerator.generateTextFromExtracts(analyzerOutput,timeFrame,detailed,threshold,multiuserThreshold);
 
 
+        //output formatting and writing
         try{
             FileWriter writer = new FileWriter(outputPath);
             if(result.isEmpty()){

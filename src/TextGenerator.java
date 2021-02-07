@@ -2,6 +2,7 @@ import java.util.*;
 
 public class TextGenerator {
 
+    //generates whole output map
     public static Map<String,String> generateTextFromExtracts(Map<String,RequestExtract> input, String timeframe, boolean detailed, int threshold, int multiuserThreshold){
         Map<String,String> res = new HashMap<>();
         for (Map.Entry<String,RequestExtract> entry : input.entrySet()){
@@ -10,14 +11,16 @@ public class TextGenerator {
         return res;
     }
 
+    //generates message for an individual requested user
     private static String generateMessage(RequestExtract extract, String timeframe, boolean detailed, int threshold, int multiuserThreshold) {
-        String res = "";
+        String res = "";    //the result String is continuously concatenated
         if (extract.highRequesters.isEmpty() && extract.negatives.isEmpty() && extract.performance.isEmpty()){
             res = "There was no extraordinary data access recorded within the last " + timeframe + ".";
             if(detailed) res += " (" + extract.total + " accesses)";
             return  res;
         }
 
+        //many users requested a single user pattern
         boolean many = false;
         if (extract.uniqueUsers > multiuserThreshold){
             res = "Many people accessed your data within the last " + timeframe + ".";
@@ -25,16 +28,17 @@ public class TextGenerator {
             many = true;
         }
 
+        //single users who requested the same users a lot pattern (highRequesters)
         boolean high = false;
         String[] highRequesterNames = extract.highRequesters.keySet().toArray(new String[0]);
         if (!extract.highRequesters.isEmpty()){
             high = true;
-            if(many) res += " Specifically your "; else res += "Your ";
+            if(many) res += " Specifically your "; else res += "Your "; //checking if previous pattern was detected
             res += "colleague";
 
-            if (extract.highRequesters.size() == 1){
+            if (extract.highRequesters.size() == 1){    //only a single user fits this pattern
                 res += " " + highRequesterNames[0];
-            } else{
+            } else{     //looping of all requesters who fit this pattern and adjusting and, commas and spaces
                 res += "s";
                 StringBuilder temp = new StringBuilder(); //String builder is preferable to simple + concatenation in loops
                 for (int i = 0; i < extract.highRequesters.size() -2; i++){
@@ -48,10 +52,13 @@ public class TextGenerator {
             if(extract.highRequesters.size() == 1){
                 RequestExtract.Counter c = extract.highRequesters.entrySet().iterator().next().getValue();
                 String temp = "";
+
+                //checking targeted field(s)
                 if (c.creator  > threshold) temp += "created and ";
                 if (c.assignee > threshold) temp += "were working on and ";
                 if (c.reporter > threshold) temp += "reported";
 
+                //making grammar adjustments depending on number of listed fields
                 if (temp.isEmpty()) temp = "your activity"; else res += "which issues you ";
                 if (temp.substring(temp.length()-3).compareTo("nd ") == 0) temp = temp.substring(0,temp.length()-5);
                 if (temp.length() > 32) temp = temp.replace("ed and ", "ed, ");
@@ -61,7 +68,7 @@ public class TextGenerator {
             if(!many) res += " over the last " + timeframe;
             res +=".";
 
-            if (detailed){
+            if (detailed){  //detailed printout for every requester who fit this pattern
                 res += "\n";
                 if (highRequesterNames.length == 1){
                     RequestExtract.Counter c = extract.highRequesters.get(highRequesterNames[0]);
@@ -86,7 +93,7 @@ public class TextGenerator {
             res += "\n";
         }
 
-
+        //negative requests pattern, only new ideas are commented (check previous patterns)
         boolean neg = false;
         if (!extract.negatives.isEmpty()){
             neg = true;
@@ -111,7 +118,7 @@ public class TextGenerator {
             }
 
             res += " made ";
-            if(extract.negatives.size() == 1 && l.size() == 1) res += "a request"; else res += "requests";
+            if(extract.negatives.size() == 1 && l.size() == 1) res += "a request"; else res += "requests";  //adjusting if a requester only made a single request
             res += " from which they can deduce on which issues you were not the ";
 
             String temp = "";
@@ -152,6 +159,8 @@ public class TextGenerator {
             res += "\n";
         }
 
+
+        //performance requests pattern, only new ideas are commented (check previous patterns)
         if(!extract.performance.isEmpty()){
             String[] respRequesters = extract.performance.keySet().toArray(new String[0]);
             if(extract.performance.size() == 1){
@@ -170,7 +179,7 @@ public class TextGenerator {
                 l = extract.performance.get(respRequesters[0]);
                 res += "They";
 
-                if (l.stream().anyMatch(d -> (d.type == 6 || d.type == 7))){
+                if (l.stream().anyMatch(d -> (d.type == 6 || d.type == 7))){    // requests querying for status WAS Resolved BY
                     String temp = " were interested in which issues you";
                     if (l.stream().anyMatch(d -> d.type == 6)) temp += " did";
                     if (l.stream().anyMatch(d -> d.type == 6) && l.stream().anyMatch(d -> d.type == 7)) temp += " and";
@@ -178,11 +187,12 @@ public class TextGenerator {
                     if (temp.substring(temp.length()-3).compareTo("did") == 0) temp = temp.replace("did", "resolved"); else temp += " resolve";
                     res += temp;
                 }
-                if (l.stream().anyMatch(d -> d.option != -1 && d.type != 6 && d.type != 7)){
+                if (l.stream().anyMatch(d -> d.option != -1 && d.type != 6 && d.type != 7)){    //requests with timeframe options
                     if(l.stream().anyMatch(d -> (d.type == 6 || d.type == 7))) res += " and";
                     res += " checked if you were involved in an issue within a certain time frame.";
                 }
             } else {
+                //splitting request into Lists according to type
                 List<String> resolved = new ArrayList<>(), notResolved = new ArrayList<>(), options = new ArrayList<>();
                 for (String user : respRequesters){
                     l = extract.performance.get(user);
@@ -239,7 +249,7 @@ public class TextGenerator {
 
 
 
-            if (detailed){
+            if (detailed){  //detailed printout of each individual request
                 StringBuilder temp = new StringBuilder(); //String builder is preferable to simple + concatenation in loops
                 temp.append("\n(") ;
                 for(String user : respRequesters){

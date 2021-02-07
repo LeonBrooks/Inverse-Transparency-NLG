@@ -7,13 +7,15 @@ public class InputAnalyzer {
         Map<String, RequestExtract> res = new HashMap<>();
         for (String[] req : input) {
             try {
-                req[1] = req[1].split("jql=")[1].trim();
+                req[1] = req[1].split("jql=")[1].trim(); //cutting requests to only the JQL query
             } catch (ArrayIndexOutOfBoundsException e){
                 System.err.println("All input requests must contain a JQL search query. A query must start with \"search?jql=\"");
                 return null;
             }
-            String[] query = req[1].split(" ");
+            String[] query = req[1].split(" "); //query must contain spaces to separate operators from fields and values
 
+
+            //checking for query options
             int options = switch (query[query.length - 2].toUpperCase(Locale.ROOT)) {
                 case "DURING" -> 0;
                 case "AFTER" -> 2;
@@ -25,6 +27,8 @@ public class InputAnalyzer {
             int type = -1;
             String requestedUser = "default";
             boolean multiple = false;
+
+            //determining request type and user(s) targeted by search
             switch (query[1].toUpperCase(Locale.ROOT)){
                 case "=":
                     type = 0;
@@ -74,7 +78,7 @@ public class InputAnalyzer {
             }
 
 
-            if(multiple){
+            if(multiple){   //requests with multiple users must be parsed differently since the are in brackets: (user,user,user)
                 String[] reqUsers = requestedUser.split(",");
                 if(type == 3){
                     if(query[0].compareToIgnoreCase("reporter")== 0){type ++;}
@@ -109,7 +113,7 @@ public class InputAnalyzer {
                 }
             } else {
                 RequestExtract extract = res.getOrDefault(requestedUser, new RequestExtract());
-                if (options != -1 || type == 7 || type == 6){
+                if (options != -1 || type == 7 || type == 6){  //performance related request
                     extract.total++;
                     RequestExtract.Details d = extract.new Details();
 
@@ -127,9 +131,11 @@ public class InputAnalyzer {
                     extract.performance.putIfAbsent(req[0], l);
                 } else {
                     RequestExtract.Counter c = extract.highRequesters.getOrDefault(req[0], extract.new Counter());
-                    switch (type) {
+                    switch (type) {  //negative requests
                         case 5, 3, 1 -> {
                             extract.total++;
+                            //for negative requests the type attribute is mapped to 0-5 to denote single/multiple people that were targeted and which field was targeted
+                            // (see section 4.3.1, page 4, last paragraph)
                             if (type == 5 || type == 1) {
                                 type = 0;
                             }
@@ -148,7 +154,7 @@ public class InputAnalyzer {
                             l.add(type);
                             extract.negatives.putIfAbsent(req[0], l);
                         }
-                        case 0, 2, 4 -> {
+                        case 0, 2, 4 -> {   //simple requests
                             extract.total++;
                             if (query[0].compareToIgnoreCase("assignee") == 0) {
                                 c.assignee++;
@@ -167,6 +173,7 @@ public class InputAnalyzer {
             }
         }
 
+        //removing users from highRequesters attribute that did not issue enough queries to pass the threshold
         for (Map.Entry<String, RequestExtract> entry : res.entrySet()) {
             RequestExtract extract = res.get(entry.getKey());
             extract.highRequesters.entrySet().removeIf(ent -> ent.getValue().sum() <= threshold);
